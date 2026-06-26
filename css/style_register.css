@@ -1,0 +1,94 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background: #f0f4f8;
+}
+
+/* Make content sit below fixed header (100px height) */
+.page-content {
+    padding-top: 120px; /* 100px for header + 20px spacing */
+}
+
+/* Form wrapper centers the form */
+.form-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* start from top after header */
+    min-height: calc(100vh - 120px); /* full viewport minus header */
+    padding: 20px;
+}
+
+/* Form container styling */
+.form-container {
+    background: #ffffff;
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+    max-width: 450px;
+    width: 100%;
+    text-align: center;
+}
+
+/* Headline */
+.form-container h1 {
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-size: 2em;
+}
+
+/* Input fields */
+.form-container input {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.form-container input:focus {
+    border-color: #4ca1af;
+}
+
+
+
+/* Links */
+.form-container p {
+    margin-top: 15px;
+    font-size: 0.95em;
+    color: #555;
+}
+
+.form-container p a {
+    color: #4ca1af;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.form-container p a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive for mobile */
+@media (max-width: 480px) {
+    .form-container {
+        padding: 30px 20px;
+    }
+    .form-container h1 {
+        font-size: 1.6em;
+    }
+}
+
+.error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}

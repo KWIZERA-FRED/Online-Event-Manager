@@ -1,0 +1,123 @@
+.main-header {
+    background: rgba(221, 233, 248, 0.3); /* semi-transparent */
+    backdrop-filter: blur(10px); /* blur effect */
+    -webkit-backdrop-filter: blur(10px); /* Safari support */
+    padding: 15px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    position: fixed;
+    width: 100%;
+    z-index: 1000; /* ensures it stays on top */
+}
+
+.header-container{
+width:90%;
+margin:auto;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.logo h2{
+color:rgb(94, 120, 153);
+font-size:26px;
+margin:0;
+font-weight:700;
+letter-spacing:1px;
+}
+
+.nav-menu ul{
+list-style:none;
+display:flex;
+gap:30px;
+margin:0;
+padding:0;
+align-items:center;
+}
+
+.nav-menu ul li a{
+text-decoration:none;
+color:rgb(94, 120, 153);
+font-size:16px;
+font-weight:800;
+transition:0.3s;
+}
+
+.nav-menu ul li a:hover{
+color:#4c58ff;
+}
+
+
+
+@media(max-width:768px){
+
+.header-container{
+flex-direction:column;
+gap:10px;
+}
+
+.nav-menu ul{
+flex-direction:column;
+gap:15px;
+}
+}
+
+.Register-btn {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 50px;
+    cursor: pointer;
+    font: 600 13px/1 'Inter', sans-serif; /* Shorthand: weight size/line-height family */
+    letter-spacing: 0.2px;
+    
+    /* Modern Minimalist Look */
+    background: rgba(52, 102, 202, 0.1); /* Subtle tint of your footer blue */
+    color: #3466ca;                      /* Use the blue for text instead of white for contrast */
+    border: 2px solid #5082e7;
+    transition: all 0.2s ease-in-out;
+}
+
+.Register-btn:hover {
+    background: #88acf3;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(52, 102, 202, 0.3);
+}
+
+.Register-btn:active {
+    transform: translatex(0);
+}
+
+/* --- Footer Layout --- */
+.footer-container {
+    width: 100%;
+    background-color: #3466ca; /* Your specific blue */
+    margin-top: 50px;           /* Spacing from the main content */
+    padding: 20px 0;           /* Vertical breathing room */
+    height: 50px;
+}
+
+.footer {
+    max-width: 1200px;         /* Keeps content aligned with your main page width */
+    margin: 0 auto;            /* Centers the footer content on the screen */
+    display: flex;
+    justify-content: center;   /* Centers text horizontally */
+    align-items: center;       /* Centers text vertically */
+    text-align: center;
+}
+
+/* --- Footer Typography --- */
+.footer h1 {
+    color: #ffffff;            /* White text for contrast against blue */
+    font-family: Arial, sans-serif;
+    font-size: 14px;           /* Adjusted from 10px for better legibility */
+    font-weight: 500;          /* Professional weight */
+    letter-spacing: 1px;       /* Adds a modern touch to the copyright notice */
+    margin: 0;
+    padding: 0;
+}
+
+/* --- Hover Effect (Optional) --- */
+.footer h1:hover {
+    color: #f0f0f0;            /* Subtle shift when hovered */
+    cursor: default;
+}

@@ -1,0 +1,141 @@
+ /* General Reset */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    background: #f4f6fb;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Section Container */
+.contact-section {
+    padding: 80px 10%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header Text */
+.contact-title {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.contact-title h1 {
+    font-size: 42px;
+    color: #0a2a66;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.contact-title p {
+    font-size: 18px;
+    color: #666;
+}
+
+/* Layout Wrapper */
+.contact-container {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+/* Cards (Info & Form) */
+.contact-info, .contact-form {
+    flex: 1;
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+/* Contact Details */
+.contact-info h2, .contact-form h2 {
+    margin-bottom: 25px;
+    color: #1b4db3;
+    font-weight: 600;
+}
+
+.info-box {
+    margin-bottom: 25px;
+}
+
+.info-box h3 {
+    margin-bottom: 5px;
+    font-size: 18px;
+    color: #0a2a66;
+}
+
+.info-box p {
+    font-size: 15px;
+    color: #555;
+    margin: 0;
+}
+
+/* Form Styling */
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 20px;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    font-size: 15px;
+    box-sizing: border-box; /* Ensures padding doesn't break layout */
+    transition: border 0.3s ease;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    outline: none;
+    border-color: #1b4db3;
+}
+
+.contact-form textarea {
+    height: 140px;
+    resize: none;
+}
+
+/* Button Styling */
+.btn-submit {
+    background: #0a2a66;
+    color: white;
+    border: none;
+    padding: 15px;
+    width: 100%;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-submit:hover {
+    background: #1b4db3;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(27, 77, 179, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
+    .contact-container {
+        flex-direction: column;
+    }
+    
+    .contact-section {
+        padding: 40px 5%;
+    }
+}
+
+.feedback-message {
+    margin-bottom: 20px;
+}
+
+.feedback-message .success-msg {
+    color: #28a745; /* green for success */
+    font-weight: 500;
+}
+
+.feedback-message .error-msg {
+    color: #dc3545; /* red for error */
+    font-weight: 500;
+}
