@@ -1,8 +1,11 @@
 <?php
 session_start();
 include_once 'classes/connect.php';
-include_once 'classes/events.php';
+include_once 'classes/User.php';
+include_once 'classes/Events.php';
 include_once 'classes/Registration.php';
+include_once 'classes/Ticket.php';
+include_once 'classes/Feedback.php';
 
 // Restrict access to admin only
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
@@ -11,30 +14,56 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 
 // Initialize classes
+$userClass = new User($conn);
 $eventsClass = new Events($conn);
 $registrationClass = new Registration($conn);
+$ticketClass = new Ticket($conn);
+$feedbackClass = new Feedback($conn);
 
 // ================= UPDATE HANDLERS =================
 
 // Update Event
 if (isset($_POST['update_event'])) {
-    $eventsClass->updateEvent($_POST['event_id'], $_POST);
+    $eventsClass->updateEvent((int) $_POST['event_id'], $_POST);
 }
 
 // Update Registration (status only)
 if (isset($_POST['update_registration'])) {
-    $registrationClass->updateStatus($_POST['registration_id'], $_POST['status']);
+    $registrationClass->updateStatus((int) $_POST['registration_id'], $_POST['status']);
 }
 
 // ================= HELPER FUNCTIONS =================
-function safeQuery($conn, $sql) {
-    $res = mysqli_query($conn, $sql);
-    return $res ? $res : false;
+
+/**
+ * Generic SELECT helper using PDO. $table must come from a fixed
+ * internal whitelist — never from user input — since table names
+ * can't be parameterized in a prepared statement.
+ */
+function safeQuery(PDO $conn, string $sql): array {
+    try {
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("adminPage safeQuery failed: " . $e->getMessage());
+        return [];
+    }
 }
 
-function countTable($conn, $table) {
-    $res = mysqli_query($conn, "SELECT COUNT(*) AS total FROM $table");
-    return $res ? mysqli_fetch_assoc($res)['total'] : 0;
+function countTable(PDO $conn, string $table): int {
+    // Whitelist guards against ever interpolating arbitrary table names
+    $allowed = ['events', 'users', 'registrations', 'tickets', 'feedback'];
+    if (!in_array($table, $allowed, true)) {
+        return 0;
+    }
+    try {
+        $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM `$table`");
+        $stmt->execute();
+        return (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    } catch (PDOException $e) {
+        error_log("adminPage countTable failed: " . $e->getMessage());
+        return 0;
+    }
 }
 
 // ================= ACTIONS =================
@@ -49,16 +78,16 @@ if (isset($_GET['delete'], $_GET['type'])) {
             $eventsClass->deleteEvent($id);
             break;
         case "user":
-            mysqli_query($conn, "DELETE FROM users WHERE user_id=$id");
+            $userClass->deleteUser($id);
             break;
         case "registration":
             $registrationClass->deleteRegistration($id);
             break;
         case "ticket":
-            mysqli_query($conn, "DELETE FROM tickets WHERE ticket_id=$id");
+            $ticketClass->deleteTicket($id);
             break;
         case "feedback":
-            mysqli_query($conn, "DELETE FROM feedback WHERE id=$id");
+            $feedbackClass->deleteFeedback($id);
             break;
     }
     header("Location: adminPage.php");
@@ -84,16 +113,16 @@ if (isset($_GET['action'], $_GET['reg_id'])) {
 if (isset($_GET['export'])) {
     $type = $_GET['export'];
     header('Content-Type: text/csv');
-    header('Content-Disposition: attachment; filename="'.$type.'_data.csv"');
+    header('Content-Disposition: attachment; filename="' . $type . '_data.csv"');
     $output = fopen("php://output", "w");
 
     switch ($type) {
         case "events":
-            fputcsv($output, ["ID","Title","Category","Date","Price","Total Capacity"]);
-            $res = mysqli_query($conn, "SELECT * FROM events");
-            while ($row = mysqli_fetch_assoc($res)) {
-                $eventsClass->max_capacity = $row['max_capacity'];
-                $eventsClass->price = $row['price'];
+            fputcsv($output, ["ID", "Title", "Category", "Date", "Price", "Total Capacity"]);
+            $rows = safeQuery($conn, "SELECT * FROM events");
+            foreach ($rows as $row) {
+                $eventsClass->max_capacity = (int) $row['max_capacity'];
+                $eventsClass->price = (float) $row['price'];
                 $totalCost = $eventsClass->calculateTotal();
                 fputcsv($output, [
                     $row['event_id'],
@@ -107,39 +136,43 @@ if (isset($_GET['export'])) {
             break;
 
         case "users":
-            fputcsv($output, ["ID","Username","Email","Role"]);
-            $res = mysqli_query($conn, "SELECT * FROM users");
-            while ($row = mysqli_fetch_assoc($res)) {
+            fputcsv($output, ["ID", "Username", "Email", "Role"]);
+            $rows = safeQuery($conn, "SELECT * FROM users");
+            foreach ($rows as $row) {
                 fputcsv($output, [$row['user_id'], $row['username'], $row['email'], $row['role']]);
             }
             break;
 
         case "registrations":
-            fputcsv($output, ["ID","User","Event","Ticket Code","Status"]);
-            $res = mysqli_query($conn, "
+            fputcsv($output, ["ID", "User", "Event", "Ticket Code", "Status"]);
+            $rows = safeQuery($conn, "
                 SELECT r.*, u.username, e.event_title 
                 FROM registrations r
                 JOIN users u ON r.user_id = u.user_id
                 JOIN events e ON r.event_id = e.event_id
             ");
-            while ($row = mysqli_fetch_assoc($res)) {
+            foreach ($rows as $row) {
                 fputcsv($output, [$row['registration_id'], $row['username'], $row['event_title'], $row['ticket_code'], $row['status']]);
             }
             break;
 
         case "tickets":
-            fputcsv($output, ["ID","Ticket Code","QR Code"]);
-            $res = mysqli_query($conn, "SELECT t.*, r.ticket_code FROM tickets t JOIN registrations r ON t.registration_id = r.registration_id");
-            while ($row = mysqli_fetch_assoc($res)) {
+            fputcsv($output, ["ID", "Ticket Code", "QR Code"]);
+            $rows = safeQuery($conn, "
+                SELECT t.*, r.ticket_code 
+                FROM tickets t 
+                JOIN registrations r ON t.registration_id = r.registration_id
+            ");
+            foreach ($rows as $row) {
                 fputcsv($output, [$row['ticket_id'], $row['ticket_code'], $row['qr_code']]);
             }
             break;
 
         case "feedback":
-            fputcsv($output, ["Name","Email","Message"]);
-            $res = mysqli_query($conn, "SELECT * FROM feedback");
-            while ($row = mysqli_fetch_assoc($res)) {
-                fputcsv($output, [$row['name'],$row['email'],$row['message']]);
+            fputcsv($output, ["Name", "Email", "Message"]);
+            $rows = safeQuery($conn, "SELECT * FROM feedback");
+            foreach ($rows as $row) {
+                fputcsv($output, [$row['name'], $row['email'], $row['message']]);
             }
             break;
     }
@@ -157,7 +190,11 @@ $registrations = safeQuery($conn, "
     JOIN users u ON r.user_id = u.user_id
     JOIN events e ON r.event_id = e.event_id
 ");
-$tickets = safeQuery($conn, "SELECT t.*, r.ticket_code FROM tickets t JOIN registrations r ON t.registration_id = r.registration_id");
+$tickets = safeQuery($conn, "
+    SELECT t.*, r.ticket_code 
+    FROM tickets t 
+    JOIN registrations r ON t.registration_id = r.registration_id
+");
 $feedbacks = safeQuery($conn, "SELECT * FROM feedback");
 
 // ================= COUNTS =================
@@ -213,15 +250,15 @@ $totalFeedback = countTable($conn, "feedback");
 </tr>
 </thead>
 <tbody>
-<?php while ($events && $row = mysqli_fetch_assoc($events)) { 
-    $eventsClass->max_capacity = $row['max_capacity'];
-    $eventsClass->price = $row['price'];
+<?php foreach ($events as $row) { 
+    $eventsClass->max_capacity = (int) $row['max_capacity'];
+    $eventsClass->price = (float) $row['price'];
     $totalCost = $eventsClass->calculateTotal();
 ?>
 <tr>
 <td><?php echo $row['event_id']; ?></td>
 <td><?php echo htmlspecialchars($row['event_title']); ?></td>
-<td><?php echo $row['category']; ?></td>
+<td><?php echo htmlspecialchars($row['category']); ?></td>
 <td><?php echo $row['event_date']; ?></td>
 <td>Rwf <?php echo $row['price']; ?></td>
 <td>Rwf <?php echo $totalCost; ?></td>
@@ -244,12 +281,12 @@ $totalFeedback = countTable($conn, "feedback");
 <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
 </thead>
 <tbody>
-<?php while ($users && $row = mysqli_fetch_assoc($users)) { ?>
+<?php foreach ($users as $row) { ?>
 <tr>
 <td><?php echo $row['user_id']; ?></td>
 <td><?php echo htmlspecialchars($row['username']); ?></td>
 <td><?php echo htmlspecialchars($row['email']); ?></td>
-<td><?php echo $row['role']; ?></td>
+<td><?php echo htmlspecialchars($row['role']); ?></td>
 <td>
 <a href="edit_user.php?id=<?php echo $row['user_id']; ?>">Edit</a> |
 <a href="?type=user&delete=<?php echo $row['user_id']; ?>" onclick="return confirm('Delete user?')">Delete</a>
@@ -271,15 +308,14 @@ $totalFeedback = countTable($conn, "feedback");
 </tr>
 </thead>
 <tbody>
-<?php while ($registrations && $row = mysqli_fetch_assoc($registrations)) { ?>
+<?php foreach ($registrations as $row) { ?>
 <tr>
 <td><?php echo $row['registration_id']; ?></td>
 <td><?php echo htmlspecialchars($row['username']); ?></td>
 <td><?php echo htmlspecialchars($row['event_title']); ?></td>
-<td><?php echo $row['ticket_code']; ?></td>
-<td><?php echo $row['status']; ?></td>
+<td><?php echo htmlspecialchars($row['ticket_code']); ?></td>
+<td><?php echo htmlspecialchars($row['status']); ?></td>
 <td>
-<!-- UPDATED LINK -->
 <a href="ticket_registration_edit.php?id=<?php echo $row['registration_id']; ?>">Edit Status</a> |
 <a href="?type=registration&delete=<?php echo $row['registration_id']; ?>" onclick="return confirm('Delete registration?')">Delete</a>
 </td>
@@ -298,11 +334,11 @@ $totalFeedback = countTable($conn, "feedback");
 <tr><th>ID</th><th>Ticket Code</th><th>QR</th><th>Actions</th></tr>
 </thead>
 <tbody>
-<?php while ($tickets && $row = mysqli_fetch_assoc($tickets)) { ?>
+<?php foreach ($tickets as $row) { ?>
 <tr>
 <td><?php echo $row['ticket_id']; ?></td>
-<td><?php echo $row['ticket_code']; ?></td>
-<td><?php echo $row['qr_code']; ?></td>
+<td><?php echo htmlspecialchars($row['ticket_code']); ?></td>
+<td><?php echo htmlspecialchars($row['qr_code']); ?></td>
 <td>
 <a href="?type=ticket&delete=<?php echo $row['ticket_id']; ?>" onclick="return confirm('Delete ticket?')">Delete</a>
 </td>
@@ -321,11 +357,11 @@ $totalFeedback = countTable($conn, "feedback");
 <tr><th>Name</th><th>Email</th><th>Message</th><th>Actions</th></tr>
 </thead>
 <tbody>
-<?php while ($feedbacks && $row = mysqli_fetch_assoc($feedbacks)) { ?>
+<?php foreach ($feedbacks as $row) { ?>
 <tr>
-<td><?php echo $row['name']; ?></td>
-<td><?php echo $row['email']; ?></td>
-<td><?php echo $row['message']; ?></td>
+<td><?php echo htmlspecialchars($row['name']); ?></td>
+<td><?php echo htmlspecialchars($row['email']); ?></td>
+<td><?php echo htmlspecialchars($row['message']); ?></td>
 <td>
 <a href="?type=feedback&delete=<?php echo $row['id']; ?>" onclick="return confirm('Delete feedback?')">Delete</a>
 </td>

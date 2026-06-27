@@ -12,8 +12,8 @@ $error = "";
 // Handle login form submission
 if (isset($_POST['login'])) {
 
-    // Sanitize input
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    // No manual escaping needed here — User::login() uses PDO prepared statements internally
+    $email = trim($_POST['email']);
     $password = $_POST['password'];
 
     // Create User object

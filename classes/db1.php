@@ -2,7 +2,7 @@
 
 class Connection {
 
-    public $conn;
+    public PDO $conn;
 
     public function __construct() {
 
@@ -10,13 +10,23 @@ class Connection {
         $username = "root";
         $password = "";
         $dbname = "umuco_db";
+        $port = "3307";
+        $charset = "utf8mb4";
+
+        $dsn = "mysql:host=$servername;port=$port;dbname=$dbname;charset=$charset";
+
+        $options = [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // throw exceptions instead of silent failures
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,                  // use real prepared statements
+        ];
 
         // Create connection
-        $this->conn = new mysqli($servername, $username, $password, $dbname);
-
-        // Check connection
-        if ($this->conn->connect_error) {
-            die("Connection failed: " . $this->conn->connect_error);
+        try {
+            $this->conn = new PDO($dsn, $username, $password, $options);
+        } catch (PDOException $e) {
+            error_log("Connection failed: " . $e->getMessage());
+            die("Connection failed. Please try again later.");
         }
 
     }
