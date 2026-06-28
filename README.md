@@ -85,10 +85,11 @@ Online Event Manager lets organizers publish and manage events while giving atte
 - [ ] Add automated email confirmations for event registration
 - [ ] Deploy a live demo
 
-## Contributors
-
-Built by **Group 11** as part of a Software Engineering coursework project.
 
 ## License
 
 This project was developed for academic purposes.
+
+##Live website link
+
+[umucoevents.infinityfree.me]
