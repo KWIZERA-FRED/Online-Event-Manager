@@ -92,4 +92,8 @@ This project was developed for academic purposes.
 
 ## Live Demo
 
-🔗 **Live Website:** https://umucoevents.infinityfree.me
+A live version of the project is available for demonstration purposes.
+
+🌐 **Website:** https://umucoevents.infinityfree.me
+
+> **Note:** Since the project is hosted on a free hosting service, the website may occasionally load slowly or become temporarily unavailable.
