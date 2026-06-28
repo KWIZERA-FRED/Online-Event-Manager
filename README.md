@@ -90,6 +90,6 @@ Online Event Manager lets organizers publish and manage events while giving atte
 
 This project was developed for academic purposes.
 
-##Live website link
+## Live Demo
 
-[umucoevents.infinityfree.me]
+🔗 **Live Website:** https://umucoevents.infinityfree.me
